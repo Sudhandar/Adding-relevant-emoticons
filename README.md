@@ -36,5 +36,21 @@ Test set:
 Accuracy: 0.857142857143
 ```
 
-- It seems the model is overfitting. Let's use an alternative model.
+- It seems the model is overfitting.
+
+The following is the confusion matrix,
+
+```
+Predicted  0.0  1.0  2.0  3.0  4.0  All
+Actual                                 
+0            6    0    0    1    0    7
+1            0    8    0    0    0    8
+2            2    0   16    0    0   18
+3            1    1    2   12    0   16
+4            0    0    1    0    6    7
+All          9    9   19   13    6   56
+
+```
+
+ Let's use an alternative model.
 
