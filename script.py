@@ -1,6 +1,8 @@
 from glove import *
 import emoji
 import numpy as np
+from keras.layers import Sequential
+from keras.layers import Embedding
 
 x_train, y_train = read_csv('data/train.csv')
 x_test, y_test = read_csv('data/test.csv')
@@ -71,4 +73,51 @@ pred = predict(X_my_sentences, Y_my_labels , W, b, word_to_vec_map)
 print_predictions(X_my_sentences, pred)
 print('           '+ label_to_emoji(0)+ '    ' + label_to_emoji(1) + '    ' +  label_to_emoji(2)+ '    ' + label_to_emoji(3)+'   ' + label_to_emoji(4))
 print(pd.crosstab(Y_test, pred_test.reshape(56,), rownames=['Actual'], colnames=['Predicted'], margins=True))
+
+
+
+def sentences_to_indices(X,word_to_index,max_length):
+    
+    m=X.shape[0]
+    
+    X_output = np.zeros((m,max_length))
+    
+    for i in range(m):
+        
+        words = X[i].lower().split()
+        
+        for j,word in enumerate(words):
+            
+            X_output[i,j] = word_to_index[word]
+
+    return X_output
+X1 = np.array(["funny lol", "lets play baseball", "food is ready for you"])
+test = sentences_to_indices(X1,word_to_index,5)
+
+def pretrained_embedding_layer(word_to_vec_map,word_to_index):
+    
+    vocab_len = len(word_to_index) +1
+    emb_dim = word_to_vec_map["apple"].shape[0]
+    
+    emb_matrix = np.zeros((vocab_len,emb_dim))
+    
+    for word,idx in word_to_index.items():
+        emb_matrix[idx,:] = word_to_vec_map[word]
+    
+    embedding_layer = Embedding(input_dim = vocab_len, output_dim = emb_dim , trainable =False)
+    
+    embedding_layer.build((None,))
+    embedding_layer.set_weights([emb_matrix])
+    
+    return embedding_layer
+
+
+embedding_layer = pretrained_embedding_layer(word_to_vec_map, word_to_index)
+
+
+
+
+
+
+
 
