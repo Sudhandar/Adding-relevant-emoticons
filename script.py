@@ -1,8 +1,13 @@
 from glove import *
 import emoji
 import numpy as np
-from keras.layers import Sequential
-from keras.layers import Embedding
+np.random.seed(0)
+from keras.models import Model
+from keras.layers import Dense, Input, Dropout, LSTM, Activation
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence
+from keras.initializers import glorot_uniform
+np.random.seed(1)
 
 x_train, y_train = read_csv('data/train.csv')
 x_test, y_test = read_csv('data/test.csv')
@@ -62,7 +67,6 @@ def model(x,y,word_to_vec_map,learning_rate = 0.01,num_of_iterations = 400):
     return pred,W,b
 
 pred, W, b = model(x_train, y_train, word_to_vec_map)
-
 pred_train = predict(x_train, y_train, W, b, word_to_vec_map)
 pred_test = predict(x_test, y_test, W, b, word_to_vec_map)
 
@@ -114,10 +118,40 @@ def pretrained_embedding_layer(word_to_vec_map,word_to_index):
 
 embedding_layer = pretrained_embedding_layer(word_to_vec_map, word_to_index)
 
+def lstm_model(input_shape,word_to_vec_map,word_to_index):
+    
+    sentence_inputs = Input(shape = input_shape ,dtype='int32')
+    
+    embedding_layer = pretrained_embedding_layer(word_to_vec_map,word_to_index)
+    
+    embeddings = embedding_layer(sentence_inputs)
+    
+    X = LSTM(units = 128, return_sequences=True)(embeddings)
+    
+    X = Dropout(rate=0.5)(X)
+    
+    X = LSTM(units = 128, return_sequences =False)(X)
+    
+    X = Dropout(rate=0.5)(X)
+    
+    X = Dense(units = 5)(X)
+    
+    X = Activation('softmax')(X)
+    
+    model = Model(inputs = sentence_inputs,outputs = X)
+    
+    return model
 
+model = lstm_model((10,),word_to_vec_map, word_to_index)
+model.summary()
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+X_train_indices = sentences_to_indices(x_train, word_to_index, 10)
+Y_train_oh = one_hot(y_train)
+model.fit(X_train_indices, Y_train_oh, epochs = 50, batch_size = 32, shuffle=True)
 
-
-
-
-
+X_test_indices = sentences_to_indices(x_test, word_to_index,10)
+Y_test_oh = one_hot(y_test)
+loss, acc = model.evaluate(X_test_indices, Y_test_oh)
+print()
+print("Test accuracy = ", acc)
 
